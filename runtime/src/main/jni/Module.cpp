@@ -139,7 +139,7 @@ void Module::RequireCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
 	try
 	{
 		string moduleName = ArgConverter::ConvertToString(args[0].As<String>());
-		Stackity::FrameEntry fe("Module::RequireCallback", moduleName);
+		Stackity::FrameEntry fe("Module::RequireCallback", "require", moduleName);
 		auto thiz = static_cast<Module*>(args.Data().As<External>()->Value());
 		thiz->RequireCallbackImpl(args);
 	}
@@ -162,7 +162,6 @@ void Module::RequireCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
 void Module::RequireCallbackImpl(const v8::FunctionCallbackInfo<v8::Value>& args)
 {
 
-	Stackity::FrameEntry fe("Module::RequireCallbackImpl");
 	auto isolate = args.GetIsolate();
 
 	if (args.Length() != 2)
@@ -243,7 +242,6 @@ void Module::CheckFileExists(Isolate* isolate, const std::string &path, const st
 
 Local<Object> Module::LoadImpl(Isolate *isolate, const string& moduleName, const string& baseDir, bool& isData)
 {
-	Stackity::FrameEntry fe("Module::LoadImpl");
 	auto pathKind = GetModulePathKind(moduleName);
 	auto cachePathKey = (pathKind == ModulePathKind::Global) ? moduleName : (baseDir + "*" + moduleName);
 
@@ -259,7 +257,7 @@ Local<Object> Module::LoadImpl(Isolate *isolate, const string& moduleName, const
 		std::string path;
 
 		{
-			Stackity::FrameEntry fe("Module::LoadImpl","Module.resolvePath");
+			Stackity::FrameEntry fe("Module::LoadImpl", "require","Module.resolvePath");
 			JniLocalRef jsModulePath(
 					env.CallStaticObjectMethod(MODULE_CLASS, RESOLVE_PATH_METHOD_ID,
 											   (jstring) jsModulename, (jstring) jsBaseDir));
@@ -307,7 +305,7 @@ Local<Object> Module::LoadImpl(Isolate *isolate, const string& moduleName, const
 Local<Object> Module::LoadModule(Isolate *isolate, const string& modulePath, const string& moduleCacheKey)
 {
 
-	Stackity::FrameEntry fe("Module::LoadModule");
+	Stackity::FrameEntry fe("Module::LoadModule", "require");
 	Local<Object> result;
 
 	auto moduleObj = Object::New(isolate);
@@ -326,7 +324,7 @@ Local<Object> Module::LoadModule(Isolate *isolate, const string& modulePath, con
 
 	if (Util::EndsWith(modulePath, ".js"))
 	{
-		Stackity::FrameEntry fe("Module::LoadModule", "Compilation");
+		Stackity::FrameEntry fe("Module::LoadModule", "require", "Compilation");
 		auto script = LoadScript(isolate, modulePath, fullRequiredModulePath);
 
 		moduleFunc = script->Run().As<Function>();
@@ -389,7 +387,7 @@ Local<Object> Module::LoadModule(Isolate *isolate, const string& modulePath, con
 	auto extendsName = ArgConverter::ConvertToV8String(isolate, "__extends");
 	thiz->Set(extendsName, isolate->GetCurrentContext()->Global()->Get(extendsName));
 
-	Stackity::FrameEntry fe1("Module::LoadModule", "Execution");
+	Stackity::FrameEntry fe1("Module::LoadModule", "require", "Execution");
 	moduleFunc->Call(thiz, sizeof(requireArgs) / sizeof(Local<Value> ), requireArgs);
 
 	if (tc.HasCaught())

@@ -132,7 +132,7 @@ ObjectManager* Runtime::GetObjectManager() const
 }
 
 void Runtime::Init(JNIEnv *_env, jobject obj, int runtimeId, jstring filesPath, jstring nativeLibDir, jstring packageName, jobjectArray args, jstring callingDir, jobject jsDebugger) {
-	Stackity::FrameEntry fe("Runtime::Init");
+	Stackity::FrameEntry fe("Runtime::Init", "init");
 	JEnv env(_env);
 
 	auto runtime = new Runtime(env, obj, runtimeId);
@@ -227,7 +227,7 @@ jobject Runtime::RunScript(JNIEnv *_env, jobject obj, jstring scriptFile)
 
 jobject Runtime::CallJSMethodNative(JNIEnv *_env, jobject obj, jint javaObjectID, jstring methodName, jint retType, jboolean isConstructor, jobjectArray packagedArgs)
 {
-	Stackity::FrameEntry fe("Runtime::CallJSMethodNative");
+	Stackity::FrameEntry fe("Runtime::CallJSMethodNative", "JSMethod");
 
 	JEnv env(_env);
 

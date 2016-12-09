@@ -204,7 +204,7 @@ void CallbackHandlers::CallJavaMethod(const Local<Object> &caller, const string 
                                       bool isSuper,
                                       const v8::FunctionCallbackInfo<v8::Value> &args) {
 
-    Stackity::FrameEntry fe("CallbackHandlers::CallJavaMethod", className + "." + methodName);
+    Stackity::FrameEntry fe("CallbackHandlers::CallJavaMethod", "Java", className + "." + methodName);
 
     JEnv env;
 
@@ -272,7 +272,7 @@ void CallbackHandlers::CallJavaMethod(const Local<Object> &caller, const string 
         clazz = env.FindClass(className);
         if (clazz != nullptr) {
 
-            Stackity::FrameEntry fe("CallbackHandlers::CallJavaMethod", "Runtime.resolveMethodOverload");
+            Stackity::FrameEntry fe("CallbackHandlers::CallJavaMethod", "Java", "Runtime.resolveMethodOverload");
             mi = MethodCache::ResolveMethodSignature(className, methodName, args, isStatic);
             if (mi.mid == nullptr) {
                 DEBUG_WRITE("Cannot resolve class=%s, method=%s, isStatic=%d, isSuper=%d",
@@ -285,7 +285,7 @@ void CallbackHandlers::CallJavaMethod(const Local<Object> &caller, const string 
             const string callerClassName = callerNode->GetName();
             DEBUG_WRITE("Resolving method on caller class: %s.%s on className %s",
                         callerClassName.c_str(), methodName.c_str(), className.c_str());
-            Stackity::FrameEntry fe("CallbackHandlers::CallJavaMethod", "Runtime.resolveMethodOverload");
+            Stackity::FrameEntry fe("CallbackHandlers::CallJavaMethod", "Java", "Runtime.resolveMethodOverload");
             mi = MethodCache::ResolveMethodSignature(callerClassName, methodName, args, isStatic);
             if (mi.mid == nullptr) {
                 DEBUG_WRITE(
@@ -815,7 +815,7 @@ Local<Value> CallbackHandlers::CallJSMethod(Isolate *isolate, JNIEnv *_env,
                                             const Local<Object> &jsObject, const string &methodName,
                                             jobjectArray args) {
 
-    Stackity::FrameEntry fe("CallbackHandlers::CallJSMethod", methodName);
+    Stackity::FrameEntry fe("CallbackHandlers::CallJSMethod", "JSMethod", methodName);
 
     JEnv env(_env);
     Local<Value> result;
@@ -850,7 +850,7 @@ Local<Value> CallbackHandlers::CallJSMethod(Isolate *isolate, JNIEnv *_env,
         TryCatch tc;
         Local<Value> jsResult;
         {
-            Stackity::FrameEntry fe("CallbackHandlers::CallJSMethod", "JS Function call");
+            Stackity::FrameEntry fe("CallbackHandlers::CallJSMethod", "JSMethod", "JS Function call");
             jsResult = jsMethod->Call(jsObject, argc, argc == 0 ? nullptr : arguments.data());
         }
 

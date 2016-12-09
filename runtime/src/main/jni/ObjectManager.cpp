@@ -159,7 +159,7 @@ jclass ObjectManager::GetJavaClass(const Local<Object>& instance)
 
 void ObjectManager::SetJavaClass(const Local<Object>& instance, jclass clazz)
 {
-	Stackity::FrameEntry fe("ObjectManager::SetJavaClass");
+	Stackity::FrameEntry fe("ObjectManager::SetJavaClass", "Java");
 	JSInstanceInfo *jsInfo = GetJSInstanceInfo(instance);
 	jsInfo->ObjectClazz = clazz;
 }

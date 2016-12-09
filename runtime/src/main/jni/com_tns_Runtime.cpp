@@ -188,7 +188,7 @@ extern "C" JNIEXPORT jobject Java_com_tns_Runtime_callJSMethodNative(JNIEnv *_en
 {
 	auto m = ArgConverter::jstringToString(methodName);
 
-	Stackity::FrameEntry fe("Runtime::callJSMethodNative", m);
+	Stackity::FrameEntry fe("Runtime::callJSMethodNative", "JSMethod", m);
 	jobject result = nullptr;
 
 	auto runtime = TryGetRuntime(runtimeId);
