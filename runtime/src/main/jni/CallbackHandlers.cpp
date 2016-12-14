@@ -707,27 +707,6 @@ void CallbackHandlers::EnableVerboseLoggingMethodCallback(
     }
 }
 
-void CallbackHandlers::DumpAllTraceToFile(const v8::FunctionCallbackInfo<v8::Value> &args) {
-    try {
-        for(int i = 0; i < Tracer::Descriptors::Count; i++) {
-            Tracer::dumpToFileForDescriptor(i);
-        }
-    }
-    catch (NativeScriptException &e) {
-        e.ReThrowToV8();
-    }
-    catch (std::exception e) {
-        stringstream ss;
-        ss << "Error: c++ exception: " << e.what() << endl;
-        NativeScriptException nsEx(ss.str());
-        nsEx.ReThrowToV8();
-    }
-    catch (...) {
-        NativeScriptException nsEx(std::string("Error: c++ exception!"));
-        nsEx.ReThrowToV8();
-    }
-}
-
 void CallbackHandlers::DisableVerboseLoggingMethodCallback(
         const v8::FunctionCallbackInfo<v8::Value> &args) {
     try {
@@ -1405,6 +1384,78 @@ void CallbackHandlers::TerminateWorkerThread(Isolate *isolate) {
     context->Exit();
 
     isolate->TerminateExecution();
+}
+
+void CallbackHandlers::FrameEntryStartCallback(Isolate *isolate, int id, int depth, long timeFromStart, const std::string &descriptor, const std::string &description) {
+    auto context = isolate->GetCurrentContext();
+    auto globalObject = context->Global();
+
+    TryCatch tc;
+
+    auto callback = globalObject->Get(
+            ArgConverter::ConvertToV8String(isolate, "__onFrameEntryStart"));
+    auto isEmpty = callback.IsEmpty();
+    auto isFunction = callback->IsFunction();
+
+    if (!isEmpty && isFunction) {
+        auto callbackParam = v8::ObjectTemplate::New(isolate);
+
+        callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "id"),
+                           v8::Number::New(isolate, id));
+        callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "depth"),
+                           v8::Number::New(isolate, depth));
+        callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "timeFromStart"),
+                           v8::Number::New(isolate, timeFromStart));
+        callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "descriptor"),
+                           ArgConverter::ConvertToV8String(isolate, descriptor));
+        callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "description"),
+                           ArgConverter::ConvertToV8String(isolate, description));
+
+        auto obj = callbackParam->NewInstance();
+
+        Local<Value> args1[] = {obj};
+
+        auto func = callback.As<Function>();
+
+        func->Call(Undefined(isolate), 1, args1);
+    }
+
+    if (tc.HasCaught()) {
+        throw NativeScriptException(tc);
+    }
+}
+
+void CallbackHandlers::FrameEntryEndCallback(Isolate *isolate, int id, int depth, float duration) {
+    try {
+        auto context = isolate->GetCurrentContext();
+        auto globalObject = context->Global();
+
+        auto callback = globalObject->Get(
+                ArgConverter::ConvertToV8String(isolate, "__onFrameEntryEnd"));
+        auto isEmpty = callback.IsEmpty();
+        auto isFunction = callback->IsFunction();
+
+        if (!isEmpty && isFunction) {
+            auto callbackParam = v8::ObjectTemplate::New(isolate);
+
+            callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "id"),
+                               v8::Number::New(isolate, id));
+            callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "depth"),
+                               v8::Number::New(isolate, depth));
+            callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "duration"),
+                               v8::Number::New(isolate, duration));
+
+            auto obj = callbackParam->NewInstance();
+
+            Local<Value> args1[] = {obj};
+
+            auto func = callback.As<Function>();
+
+            func->Call(Undefined(isolate), 1, args1);
+        }
+    } catch (std::exception ex) {
+
+    }
 }
 
 int CallbackHandlers::nextWorkerId = 0;

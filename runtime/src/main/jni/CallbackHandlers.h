@@ -82,10 +82,6 @@ namespace tns
 			 */
 			static jobjectArray GetImplementedInterfaces(JEnv &env, const v8::Local<v8::Object> &implementationObject);
 
-			static void GetBenchmarkResultCallback(const v8::FunctionCallbackInfo<v8::Value>& args);
-
-			static void DumpAllTraceToFile(const v8::FunctionCallbackInfo<v8::Value>& args);
-
 			static void EnableVerboseLoggingMethodCallback(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 			static void DisableVerboseLoggingMethodCallback(const v8::FunctionCallbackInfo<v8::Value>& args);
@@ -156,6 +152,9 @@ namespace tns
 			 */
 			static void CallWorkerObjectOnErrorHandle(v8::Isolate *isolate, jint workerId, jstring message, jstring stackTrace, jstring filename, jint lineno, jstring threadName);
 
+			static void FrameEntryStartCallback(v8::Isolate *isolate, int id, int depth, long timeFromStart, const std::string &descriptor, const std::string &description);
+
+			static void FrameEntryEndCallback(v8::Isolate *isolate, int id, int depth, float duration);
 		private:
 			CallbackHandlers()
 			{

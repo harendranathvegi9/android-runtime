@@ -132,7 +132,6 @@ ObjectManager* Runtime::GetObjectManager() const
 }
 
 void Runtime::Init(JNIEnv *_env, jobject obj, int runtimeId, jstring filesPath, jstring nativeLibDir, jstring packageName, jobjectArray args, jstring callingDir, jobject jsDebugger) {
-	Stackity::FrameEntry fe("Runtime::Init");
 	JEnv env(_env);
 
 	auto runtime = new Runtime(env, obj, runtimeId);
@@ -551,7 +550,6 @@ Isolate* Runtime::PrepareV8Runtime(const string& filesPath, jstring nativeLibDir
 	globalTemplate->Set(ArgConverter::ConvertToV8String(isolate, "__debugbreak"), FunctionTemplate::New(isolate, JsDebugger::DebugBreakCallback));
 	globalTemplate->Set(ArgConverter::ConvertToV8String(isolate, "__consoleMessage"), FunctionTemplate::New(isolate, JsDebugger::ConsoleMessageCallback));
 	globalTemplate->Set(ArgConverter::ConvertToV8String(isolate, "__enableVerboseLogging"), FunctionTemplate::New(isolate, CallbackHandlers::EnableVerboseLoggingMethodCallback));
-	globalTemplate->Set(ArgConverter::ConvertToV8String(isolate, "__dumpTraceFile"), FunctionTemplate::New(isolate, CallbackHandlers::DumpAllTraceToFile));
 	globalTemplate->Set(ArgConverter::ConvertToV8String(isolate, "__disableVerboseLogging"), FunctionTemplate::New(isolate, CallbackHandlers::DisableVerboseLoggingMethodCallback));
 	globalTemplate->Set(ArgConverter::ConvertToV8String(isolate, "__exit"), FunctionTemplate::New(isolate, CallbackHandlers::ExitMethodCallback));
 	globalTemplate->Set(ArgConverter::ConvertToV8String(isolate, "__runtimeVersion"), ArgConverter::ConvertToV8String(isolate, NATIVE_SCRIPT_RUNTIME_VERSION), readOnlyFlags);
@@ -574,6 +572,8 @@ Isolate* Runtime::PrepareV8Runtime(const string& filesPath, jstring nativeLibDir
 		prototype->Set(ArgConverter::ConvertToV8String(isolate, "terminate"), terminateWorkerFuncTemplate);
 
 		globalTemplate->Set(ArgConverter::ConvertToV8String(isolate, "Worker"), workerFuncTemplate);
+
+		Stackity::setIsolate(isolate);
 	}
 	/*
 	 * Emulate a `WorkerGlobalScope`
