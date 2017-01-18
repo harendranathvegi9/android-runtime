@@ -5,6 +5,7 @@
 #include <chrono>
 #include <string>
 #include <stack>
+#include <queue>
 #include "Tracer.h"
 #include "v8.h"
 #include "ArgConverter.h"
@@ -57,12 +58,44 @@ namespace tns {
             std::string m_description;
             std::string m_message;
             std::chrono::time_point<std::chrono::steady_clock> m_start;
+
+            struct FrameEntryStartObject {
+                FrameEntryStartObject(int id, int depth, long timeFromStart, std::string descriptor, std::string description) :
+                        m_id(id),
+                        m_depth(depth),
+                        m_time(timeFromStart),
+                        m_descriptor(descriptor),
+                        m_description(description) {
+                }
+
+            public:
+                int m_id;
+                int m_depth;
+                long m_time;
+                std::string m_descriptor;
+                std::string m_description;
+            };
+
+            struct FrameEntryEndObject {
+                FrameEntryEndObject(int id, int depth, float duration) :
+                        m_id(id),
+                        m_depth(depth),
+                        m_duration(duration) {
+                }
+
+            public:
+                int m_id;
+                int m_depth;
+                float m_duration;;
+            };
         };
 
         static v8::Isolate *s_isolate;
         static int s_frames;
         static int s_frame_id;
         static std::chrono::time_point<std::chrono::steady_clock> s_benchmarkStart;
+        static std::queue<FrameEntry::FrameEntryStartObject> s_pendingFrameStartEntries;
+        static std::queue<FrameEntry::FrameEntryEndObject> s_pendingFrameEndEntries;
     };
 }
 

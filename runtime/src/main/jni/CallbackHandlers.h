@@ -152,8 +152,16 @@ namespace tns
 			 */
 			static void CallWorkerObjectOnErrorHandle(v8::Isolate *isolate, jint workerId, jstring message, jstring stackTrace, jstring filename, jint lineno, jstring threadName);
 
+			/*
+			 * Is called when benchmarking is enabled and when runtime code is benchmarked starts executing.
+			 * Will invoke a JavaScript function attached to the global scope
+			 */
 			static void FrameEntryStartCallback(v8::Isolate *isolate, int id, int depth, long timeFromStart, const std::string &descriptor, const std::string &description);
 
+			/*
+			 * Is called when benchmarking is enabled and when runtime code is benchmarked completes executing.
+			 * Will invoke a JavaScript function attached to the global scope
+			 */
 			static void FrameEntryEndCallback(v8::Isolate *isolate, int id, int depth, float duration);
 		private:
 			CallbackHandlers()
@@ -211,6 +219,9 @@ namespace tns
 					jfieldID _fieldID;
 					jobject _runtime;
 			};
+
+			static void FrameEntryStartCallFunction(v8::Isolate *isolate, v8::Local<v8::Function> func, int id, int depth, long timeFromStart, const std::string &descriptor, const std::string &description);
+			static void FrameEntryEndCallFunction(v8::Isolate *isolate, v8::Local<v8::Function> func, int id, int depth, float duration);
 	};
 }
 

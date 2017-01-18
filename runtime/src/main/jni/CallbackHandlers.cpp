@@ -1392,32 +1392,29 @@ void CallbackHandlers::FrameEntryStartCallback(Isolate *isolate, int id, int dep
 
     TryCatch tc;
 
+    HandleScope scope(isolate);
+
     auto callback = globalObject->Get(
             ArgConverter::ConvertToV8String(isolate, "__onFrameEntryStart"));
     auto isEmpty = callback.IsEmpty();
     auto isFunction = callback->IsFunction();
 
     if (!isEmpty && isFunction) {
-        auto callbackParam = v8::ObjectTemplate::New(isolate);
-
-        callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "id"),
-                           v8::Number::New(isolate, id));
-        callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "depth"),
-                           v8::Number::New(isolate, depth));
-        callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "timeFromStart"),
-                           v8::Number::New(isolate, timeFromStart));
-        callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "descriptor"),
-                           ArgConverter::ConvertToV8String(isolate, descriptor));
-        callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "description"),
-                           ArgConverter::ConvertToV8String(isolate, description));
-
-        auto obj = callbackParam->NewInstance();
-
-        Local<Value> args1[] = {obj};
-
         auto func = callback.As<Function>();
 
-        func->Call(Undefined(isolate), 1, args1);
+        if (!Stackity::s_pendingFrameStartEntries.empty()) {
+            while (!Stackity::s_pendingFrameStartEntries.empty()) {
+                auto pendingEntry = Stackity::s_pendingFrameStartEntries.front();
+
+                FrameEntryStartCallFunction(isolate, func, pendingEntry.m_id, pendingEntry.m_depth, pendingEntry.m_time, pendingEntry.m_descriptor, pendingEntry.m_description);
+
+                Stackity::s_pendingFrameStartEntries.pop();
+            }
+        }
+
+        FrameEntryStartCallFunction(isolate, func, id, depth, timeFromStart, descriptor, description);
+    } else {
+        Stackity::s_pendingFrameStartEntries.push(Stackity::FrameEntry::FrameEntryStartObject(id, depth, timeFromStart, descriptor, description));
     }
 
     if (tc.HasCaught()) {
@@ -1425,37 +1422,70 @@ void CallbackHandlers::FrameEntryStartCallback(Isolate *isolate, int id, int dep
     }
 }
 
+void CallbackHandlers::FrameEntryStartCallFunction(Isolate *isolate, Local<Function> func, int id, int depth, long timeFromStart, const std::string &descriptor, const std::string &description) {
+    auto callbackParam = v8::ObjectTemplate::New(isolate);
+
+    callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "id"),
+                       v8::Number::New(isolate, id));
+    callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "depth"),
+                       v8::Number::New(isolate, depth));
+    callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "timeFromStart"),
+                       v8::Number::New(isolate, timeFromStart));
+    callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "descriptor"),
+                       ArgConverter::ConvertToV8String(isolate, descriptor));
+    callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "description"),
+                       ArgConverter::ConvertToV8String(isolate, description));
+
+    auto obj = callbackParam->NewInstance();
+
+    Local<Value> args1[] = {obj};
+
+    func->Call(Undefined(isolate), 1, args1);
+}
+
 void CallbackHandlers::FrameEntryEndCallback(Isolate *isolate, int id, int depth, float duration) {
-    try {
-        auto context = isolate->GetCurrentContext();
-        auto globalObject = context->Global();
+    auto context = isolate->GetCurrentContext();
+    auto globalObject = context->Global();
 
-        auto callback = globalObject->Get(
-                ArgConverter::ConvertToV8String(isolate, "__onFrameEntryEnd"));
-        auto isEmpty = callback.IsEmpty();
-        auto isFunction = callback->IsFunction();
+    auto callback = globalObject->Get(
+            ArgConverter::ConvertToV8String(isolate, "__onFrameEntryEnd"));
+    auto isEmpty = callback.IsEmpty();
+    auto isFunction = callback->IsFunction();
 
-        if (!isEmpty && isFunction) {
-            auto callbackParam = v8::ObjectTemplate::New(isolate);
+    if (!isEmpty && isFunction) {
+        auto func = callback.As<Function>();
 
-            callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "id"),
-                               v8::Number::New(isolate, id));
-            callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "depth"),
-                               v8::Number::New(isolate, depth));
-            callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "duration"),
-                               v8::Number::New(isolate, duration));
+        if (!Stackity::s_pendingFrameEndEntries.empty()) {
+            while (!Stackity::s_pendingFrameEndEntries.empty()) {
+                auto pendingEntry = Stackity::s_pendingFrameEndEntries.front();
 
-            auto obj = callbackParam->NewInstance();
+                FrameEntryEndCallFunction(isolate, func, pendingEntry.m_id, pendingEntry.m_depth, pendingEntry.m_duration);
 
-            Local<Value> args1[] = {obj};
-
-            auto func = callback.As<Function>();
-
-            func->Call(Undefined(isolate), 1, args1);
+                Stackity::s_pendingFrameEndEntries.pop();
+            }
         }
-    } catch (std::exception ex) {
 
+        FrameEntryEndCallFunction(isolate, func, id, depth, duration);
+    } else {
+        Stackity::s_pendingFrameEndEntries.push(Stackity::FrameEntry::FrameEntryEndObject(id, depth, duration));
     }
+}
+
+void CallbackHandlers::FrameEntryEndCallFunction(Isolate *isolate, Local<Function> func, int id, int depth, float duration) {
+    auto callbackParam = v8::ObjectTemplate::New(isolate);
+
+    callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "id"),
+                       v8::Number::New(isolate, id));
+    callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "depth"),
+                       v8::Number::New(isolate, depth));
+    callbackParam->Set(ArgConverter::ConvertToV8String(isolate, "duration"),
+                       v8::Number::New(isolate, duration));
+
+    auto obj = callbackParam->NewInstance();
+
+    Local<Value> args1[] = {obj};
+
+    func->Call(Undefined(isolate), 1, args1);
 }
 
 int CallbackHandlers::nextWorkerId = 0;
