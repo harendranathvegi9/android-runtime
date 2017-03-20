@@ -703,6 +703,7 @@ void ObjectManager::MakeRegularObjectsWeak(const set<int>& instances, DirectBuff
 		if (!success)
 		{
 			int length = inputBuff.Length();
+			__android_log_print(android_LogPriority::ANDROID_LOG_DEBUG, "Weak Ref Dump", "MakeRegularObjectsWeak id: " + javaObjectId);
 			m_env.CallVoidMethod(m_javaRuntimeObject, MAKE_INSTANCE_WEAK_BATCH_METHOD_ID, (jobject) inputBuff, length, keepAsWeak);
 			inputBuff.Reset();
 			success = inputBuff.Write(javaObjectId);
@@ -739,6 +740,7 @@ void ObjectManager::MakeImplObjectsWeak(const map<int, Persistent<Object>*>& ins
 			{
 				int length = inputBuff.Length();
 				jboolean keepAsWeak = JNI_TRUE;
+				__android_log_print(android_LogPriority::ANDROID_LOG_DEBUG, "Weak Ref Dump", "MakeImplObjectsWeak id: " + javaObjectId);
 				m_env.CallVoidMethod(m_javaRuntimeObject, MAKE_INSTANCE_WEAK_BATCH_METHOD_ID, (jobject) inputBuff, length, keepAsWeak);
 				inputBuff.Reset();
 				success = inputBuff.Write(javaObjectId);

@@ -94,6 +94,8 @@ public class Runtime
     private final Object keyNotFoundObject = new Object();
     private int currentObjectId = -1;
 
+    private final static String TAG = "WEAK REF DUMP";
+
     private ExtractPolicy extractPolicy;
 
     private ArrayList<Constructor<?>> ctorCache = new ArrayList<Constructor<?>>();
@@ -896,6 +898,9 @@ public class Runtime
     {
         if (logger.isEnabled())
             logger.write("makeInstanceWeak instance " + javaObjectID + " keepAsWeak=" + keepAsWeak);
+
+        android.util.Log.d(TAG, "Make instance weak for reference id: " + javaObjectID + ". Keep as weak: " + keepAsWeak);
+
         Object instance = strongInstances.get(javaObjectID);
 
         if (keepAsWeak)
@@ -939,6 +944,8 @@ public class Runtime
                 if (instance == null)
                 {
                     isReleased = 1;
+
+                    android.util.Log.d(TAG, "Deleting reference for id: " + javaObjectId);
                     weakInstances.delete(javaObjectId);
                 }
                 else
@@ -968,6 +975,16 @@ public class Runtime
             WeakReference<Object> wr = weakInstances.get(javaObjectID);
             if (wr == null)
             {
+                android.util.Log.d(TAG, "Dumping all weak references: ");
+
+                for (int i = 0; i < weakInstances.size(); i++) {
+                    int key = weakInstances.keyAt(i);
+                    // get the object by the key.
+                    WeakReference<Object> obj = weakInstances.get(key);
+
+                    android.util.Log.d(TAG, "Instance for reference id: " + key + (obj != null ? " exists." : " doesn't exist."));
+                }
+
                 throw new NativeScriptException("No weak reference found. Attempt to use cleared object reference id=" + javaObjectID);
             }
 
