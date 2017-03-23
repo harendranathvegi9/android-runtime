@@ -87,7 +87,6 @@ JniLocalRef ObjectManager::GetJavaObjectByJsObject(const Local<Object>& object)
 
 ObjectManager::JSInstanceInfo* ObjectManager::GetJSInstanceInfo(const Local<Object>& object)
 {
-	DEBUG_WRITE("ObjectManager::GetJSInstanceInfo: called");
 	JSInstanceInfo *jsInstanceInfo = nullptr;
 
 	auto isolate = m_isolate;
@@ -148,8 +147,6 @@ void ObjectManager::UpdateCache(int objectID, jobject obj)
 
 jclass ObjectManager::GetJavaClass(const Local<Object>& instance)
 {
-	DEBUG_WRITE("GetClass called");
-
 	JSInstanceInfo *jsInfo = GetJSInstanceInfo(instance);
 	jclass clazz = jsInfo->ObjectClazz;
 
@@ -158,8 +155,6 @@ jclass ObjectManager::GetJavaClass(const Local<Object>& instance)
 
 void ObjectManager::SetJavaClass(const Local<Object>& instance, jclass clazz)
 {
-	DEBUG_WRITE("SetClass called");
-
 	JSInstanceInfo *jsInfo = GetJSInstanceInfo(instance);
 	jsInfo->ObjectClazz = clazz;
 }
@@ -308,8 +303,6 @@ void ObjectManager::JSObjectWeakCallbackStatic(const WeakCallbackInfo<ObjectWeak
  * */
 void ObjectManager::JSObjectWeakCallback(Isolate *isolate, ObjectWeakCallbackState *callbackState)
 {
-	DEBUG_WRITE("JSObjectWeakCallback called");
-
 	HandleScope handleScope(isolate);
 
 	Persistent<Object> *po = callbackState->target;
@@ -361,8 +354,6 @@ int ObjectManager::GenerateNewObjectID()
 
 void ObjectManager::ReleaseJSInstance(Persistent<Object> *po, JSInstanceInfo *jsInstanceInfo)
 {
-	DEBUG_WRITE("ReleaseJSInstance instance");
-
 	int javaObjectID = jsInstanceInfo->JavaObjectID;
 
 	auto it = m_idToObject.find(javaObjectID);
